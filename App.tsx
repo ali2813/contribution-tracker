@@ -7,6 +7,7 @@ import AddMemberModal from './components/AddMemberModal';
 import ImportMembersModal from './components/ImportMembersModal';
 import GeminiChat from './components/GeminiChat';
 import LoginPage from './components/LoginPage';
+import VantaBackground from './components/VantaBackground';
 import { supabase, mapMemberFromDB, mapMemberToDB, DbMember } from './services/supabaseClient';
 import { Search, LayoutDashboard, Users, Plus, Moon, Sun, LogOut, RotateCw, AlertCircle, Upload } from 'lucide-react';
 
@@ -276,10 +277,13 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className={`min-h-screen font-sans selection:bg-blue-500/30 text-slate-900 dark:text-slate-200 flex flex-col`}>
-      
+    <div className={`min-h-screen font-sans selection:bg-blue-500/30 text-slate-900 dark:text-slate-200 flex flex-col relative`}>
+
+      {/* 3D Animated Background */}
+      <VantaBackground theme={theme} />
+
       {/* Top Navigation */}
-      <header className="bg-white/80 dark:bg-[#1e293b]/80 backdrop-blur-md shadow-sm dark:shadow-lg sticky top-0 z-30 border-b border-slate-200 dark:border-slate-700/50 transition-colors duration-300">
+      <header className="relative bg-white/80 dark:bg-[#1e293b]/80 backdrop-blur-md shadow-sm dark:shadow-lg sticky top-0 z-30 border-b border-slate-200 dark:border-slate-700/50 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="relative group">
@@ -329,7 +333,7 @@ const App: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1 w-full">
+      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1 w-full">
         
         {/* Sync Status / Error */}
         {syncError && (
@@ -476,7 +480,7 @@ const App: React.FC = () => {
       <GeminiChat members={members} />
 
       {/* Footer */}
-      <footer className="py-6 text-center text-slate-400 text-xs border-t border-slate-200 dark:border-slate-700/50 bg-white/50 dark:bg-slate-900/50">
+      <footer className="relative z-10 py-6 text-center text-slate-400 text-xs border-t border-slate-200 dark:border-slate-700/50 bg-white/50 dark:bg-slate-900/50">
           <p>© {new Date().getFullYear()} Markaz Masjid | Built by <span className="font-semibold text-slate-500 dark:text-slate-300">BlackScale Digital</span></p>
       </footer>
     </div>
