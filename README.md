@@ -1,4 +1,4 @@
-# Markaz Masjid
+# Local Mosque Financial Contribution App
 
 A contribution tracker for managing mosque member donations and pledges.
 
