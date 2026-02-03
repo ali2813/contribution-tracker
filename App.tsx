@@ -9,7 +9,7 @@ import GeminiChat from './components/GeminiChat';
 import LoginPage from './components/LoginPage';
 import VantaBackground from './components/VantaBackground';
 import { supabase, mapMemberFromDB, mapMemberToDB, DbMember, validateAccessCode } from './services/supabaseClient';
-import { Search, LayoutDashboard, Users, Plus, Moon, Sun, LogOut, RotateCw, AlertCircle, Upload } from 'lucide-react';
+import { Search, LayoutDashboard, Users, Plus, Moon, Sun, LogOut, RotateCw, AlertCircle, Upload, Menu, X } from 'lucide-react';
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -28,6 +28,7 @@ const App: React.FC = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // 1. Fetch Initial Data
   const fetchMembers = async () => {
@@ -286,46 +287,65 @@ const App: React.FC = () => {
       {/* Top Navigation */}
       <header className="relative bg-white/80 dark:bg-[#1e293b]/80 backdrop-blur-md shadow-sm dark:shadow-lg sticky top-0 z-30 border-b border-slate-200 dark:border-slate-700/50 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <button onClick={() => setActiveTab('dashboard')} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+          <button onClick={() => { setActiveTab('dashboard'); setMobileMenuOpen(false); }} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <img src="/logo.png" alt="Markaz Masjid" className="h-10 w-auto rounded-lg" />
             <span className="font-bold text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400">
                 Markaz Masjid
             </span>
           </button>
-          
-          <nav className="flex items-center gap-2">
-            <button
-                onClick={toggleTheme}
-                className="hidden sm:block p-2 rounded-lg text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
-                title="Toggle Theme"
-            >
-                {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
-            <div className="hidden sm:block w-px h-6 bg-slate-300 dark:bg-slate-700 mx-1"></div>
-            <button
-                onClick={() => setActiveTab('dashboard')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === 'dashboard' ? 'bg-blue-50 text-blue-600 dark:bg-blue-600/10 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5'}`}
-            >
-                <LayoutDashboard size={18} />
-                <span>Dashboard</span>
-            </button>
-            <button
-                onClick={() => setActiveTab('members')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === 'members' ? 'bg-blue-50 text-blue-600 dark:bg-blue-600/10 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5'}`}
-            >
-                <Users size={18} />
-                <span>Members</span>
-            </button>
-            <div className="w-px h-6 bg-slate-300 dark:bg-slate-700 mx-1"></div>
-            <button 
-                onClick={handleLogout}
-                className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
-                title="Sign Out"
-            >
-                <LogOut size={18} />
-            </button>
-          </nav>
+
+          {/* Menu Button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+          >
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
         </div>
+
+        {/* Dropdown Menu */}
+        {mobileMenuOpen && (
+          <>
+            {/* Overlay to close menu */}
+            <div
+              className="fixed inset-0 z-30"
+              onClick={() => setMobileMenuOpen(false)}
+            />
+            <div className="absolute top-16 right-4 w-64 bg-white dark:bg-[#1e293b] backdrop-blur-md border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl animate-in slide-in-from-top-2 fade-in duration-200 z-40">
+              <div className="p-3 space-y-1">
+                <button
+                  onClick={() => { setActiveTab('dashboard'); setMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium transition-all ${activeTab === 'dashboard' ? 'bg-blue-50 text-blue-600 dark:bg-blue-600/10 dark:text-blue-400' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5'}`}
+                >
+                  <LayoutDashboard size={20} />
+                  Dashboard
+                </button>
+                <button
+                  onClick={() => { setActiveTab('members'); setMobileMenuOpen(false); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium transition-all ${activeTab === 'members' ? 'bg-blue-50 text-blue-600 dark:bg-blue-600/10 dark:text-blue-400' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5'}`}
+                >
+                  <Users size={20} />
+                  Members
+                </button>
+                <div className="border-t border-slate-200 dark:border-slate-700 my-2"></div>
+                <button
+                  onClick={toggleTheme}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5 transition-all"
+                >
+                  {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+                  {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+                </button>
+                <button
+                  onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
+                >
+                  <LogOut size={20} />
+                  Sign Out
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </header>
 
       {/* Main Content */}
@@ -474,15 +494,6 @@ const App: React.FC = () => {
 
       {/* AI Assistant */}
       <GeminiChat members={members} />
-
-      {/* Mobile Theme Toggle - Bottom */}
-      <button
-        onClick={toggleTheme}
-        className="sm:hidden fixed bottom-4 left-4 z-40 p-3 rounded-full bg-white/90 dark:bg-slate-800/90 backdrop-blur-md shadow-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 transition-all active:scale-95"
-        title="Toggle Theme"
-      >
-        {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-      </button>
 
       {/* Footer */}
       <footer className="relative z-10 py-6 text-center text-slate-400 text-xs border-t border-slate-200 dark:border-slate-700/50 bg-white/50 dark:bg-slate-900/50">
