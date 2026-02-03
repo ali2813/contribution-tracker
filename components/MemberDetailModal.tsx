@@ -1,6 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Member, Payment } from '../types';
-import { X, Plus, Trash2, Calendar, DollarSign, Phone, FileText, Mail, Pencil, MessageCircle, Copy, Check, Loader2, AlertTriangle } from 'lucide-react';
+import { X, Plus, Trash2, Calendar, DollarSign, Phone, FileText, Mail, Pencil, MessageCircle, Copy, Check, Loader2, AlertTriangle, Camera, Download, Share2 } from 'lucide-react';
+
+declare global {
+  interface Window {
+    html2canvas: (element: HTMLElement, options?: Record<string, unknown>) => Promise<HTMLCanvasElement>;
+  }
+}
 
 interface MemberDetailModalProps {
   member: Member;
@@ -19,9 +25,15 @@ const MemberDetailModal: React.FC<MemberDetailModalProps> = ({ member, onClose, 
   const [copied, setCopied] = useState(false);
   const [isDeletingMember, setIsDeletingMember] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  
+
   // Track deleting state per item
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Snapshot states
+  const [snapshotPreview, setSnapshotPreview] = useState<string | null>(null);
+  const [isGeneratingSnapshot, setIsGeneratingSnapshot] = useState(false);
+  const [snapshotCopied, setSnapshotCopied] = useState(false);
+  const receiptRef = useRef<HTMLDivElement>(null);
 
   // Local state for payments to ensure immediate UI feedback
   const [localPayments, setLocalPayments] = useState<Payment[]>(member.payments || []);
@@ -146,11 +158,85 @@ const MemberDetailModal: React.FC<MemberDetailModalProps> = ({ member, onClose, 
   const copyReminder = () => {
       const remaining = member.committedAmount - totalPaid;
       const text = `As-salamu alaykum ${member.name}, \n\nThis is a friendly reminder regarding your pledge to Markaz Masjid. \nCommitted: $${member.committedAmount}\nPaid so far: $${totalPaid}\nRemaining Balance: $${remaining}\n\nJazakAllah Khair for your continued support!`;
-      
+
       navigator.clipboard.writeText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
   };
+
+  const generateSnapshot = async () => {
+    if (!receiptRef.current || !window.html2canvas) return;
+
+    setIsGeneratingSnapshot(true);
+    try {
+      const canvas = await window.html2canvas(receiptRef.current, {
+        scale: 2,
+        backgroundColor: '#ffffff',
+        logging: false,
+      });
+      const dataUrl = canvas.toDataURL('image/png');
+      setSnapshotPreview(dataUrl);
+    } catch (error) {
+      console.error('Failed to generate snapshot:', error);
+      alert('Failed to generate snapshot. Please try again.');
+    } finally {
+      setIsGeneratingSnapshot(false);
+    }
+  };
+
+  const copySnapshotToClipboard = async () => {
+    if (!snapshotPreview) return;
+
+    try {
+      const response = await fetch(snapshotPreview);
+      const blob = await response.blob();
+      await navigator.clipboard.write([
+        new ClipboardItem({ 'image/png': blob })
+      ]);
+      setSnapshotCopied(true);
+      setTimeout(() => setSnapshotCopied(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy image:', error);
+      alert('Failed to copy image. Try downloading instead.');
+    }
+  };
+
+  const downloadSnapshot = () => {
+    if (!snapshotPreview) return;
+
+    const link = document.createElement('a');
+    link.download = `${member.name.replace(/\s+/g, '_')}_contribution_statement.png`;
+    link.href = snapshotPreview;
+    link.click();
+  };
+
+  const shareSnapshot = async () => {
+    if (!snapshotPreview) return;
+
+    try {
+      const response = await fetch(snapshotPreview);
+      const blob = await response.blob();
+      const file = new File([blob], `${member.name}_statement.png`, { type: 'image/png' });
+
+      if (navigator.share && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: 'Contribution Statement',
+          text: `Contribution statement for ${member.name}`,
+        });
+      } else {
+        // Fallback for desktop - just download
+        downloadSnapshot();
+      }
+    } catch (error: any) {
+      if (error.name !== 'AbortError') {
+        console.error('Share failed:', error);
+        downloadSnapshot();
+      }
+    }
+  };
+
+  const canShare = typeof navigator !== 'undefined' && !!navigator.share;
 
   return (
     <div className="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -214,28 +300,36 @@ const MemberDetailModal: React.FC<MemberDetailModalProps> = ({ member, onClose, 
           
           {/* Quick Contact Actions */}
           <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">Quick Contact</h3>
-            <div className="grid grid-cols-3 gap-2">
-                <button 
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">Quick Actions</h3>
+            <div className="grid grid-cols-4 gap-2">
+                <button
                     onClick={openWhatsApp}
                     className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white py-2 px-2 rounded-lg text-xs sm:text-sm font-medium transition-colors shadow-sm"
                 >
                     <MessageCircle size={16} />
-                    <span>WhatsApp</span>
+                    <span className="hidden sm:inline">WhatsApp</span>
                 </button>
-                <a 
+                <a
                     href={`tel:${member.phone}`}
                     className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 py-2 px-2 rounded-lg text-xs sm:text-sm font-medium transition-colors border border-slate-200 dark:border-slate-600"
                 >
                     <Phone size={16} />
-                    <span>Call</span>
+                    <span className="hidden sm:inline">Call</span>
                 </a>
-                <button 
+                <button
                     onClick={copyReminder}
                     className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 py-2 px-2 rounded-lg text-xs sm:text-sm font-medium transition-colors border border-slate-200 dark:border-slate-600"
                 >
                     {copied ? <Check size={16} className="text-emerald-500" /> : <Copy size={16} />}
-                    <span>{copied ? 'Copied' : 'Reminder'}</span>
+                    <span className="hidden sm:inline">{copied ? 'Copied' : 'Reminder'}</span>
+                </button>
+                <button
+                    onClick={generateSnapshot}
+                    disabled={isGeneratingSnapshot}
+                    className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 bg-blue-600 hover:bg-blue-500 text-white py-2 px-2 rounded-lg text-xs sm:text-sm font-medium transition-colors shadow-sm disabled:opacity-50"
+                >
+                    {isGeneratingSnapshot ? <Loader2 size={16} className="animate-spin" /> : <Camera size={16} />}
+                    <span className="hidden sm:inline">{isGeneratingSnapshot ? 'Wait...' : 'Snapshot'}</span>
                 </button>
             </div>
           </div>
@@ -374,6 +468,134 @@ const MemberDetailModal: React.FC<MemberDetailModalProps> = ({ member, onClose, 
 
         </div>
       </div>
+
+      {/* Hidden Receipt for Snapshot - positioned off-screen */}
+      <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
+        <div
+          ref={receiptRef}
+          style={{
+            width: '400px',
+            padding: '24px',
+            backgroundColor: '#ffffff',
+            fontFamily: 'Inter, sans-serif',
+          }}
+        >
+          {/* Header */}
+          <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+            <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#1e3a8a', margin: '0 0 4px 0' }}>
+              Markaz Masjid
+            </h1>
+            <p style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 8px 0' }}>
+              Contribution Statement
+            </p>
+            <p style={{ fontSize: '12px', color: '#94a3b8', margin: 0 }}>
+              {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+            </p>
+          </div>
+
+          {/* Member Info */}
+          <div style={{ marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid #e2e8f0' }}>
+            <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#0f172a', margin: '0 0 4px 0' }}>
+              {member.name}
+            </h2>
+            <p style={{ fontSize: '14px', color: '#64748b', margin: 0 }}>
+              {member.phone || 'No phone'}
+            </p>
+          </div>
+
+          {/* Financial Summary */}
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+            <div style={{ flex: 1, backgroundColor: '#f1f5f9', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+              <p style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase', margin: '0 0 4px 0' }}>Committed</p>
+              <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#334155', margin: 0 }}>${member.committedAmount.toLocaleString()}</p>
+            </div>
+            <div style={{ flex: 1, backgroundColor: '#dcfce7', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+              <p style={{ fontSize: '10px', color: '#16a34a', textTransform: 'uppercase', margin: '0 0 4px 0' }}>Paid</p>
+              <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#16a34a', margin: 0 }}>${totalPaid.toLocaleString()}</p>
+            </div>
+            <div style={{ flex: 1, backgroundColor: '#dbeafe', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+              <p style={{ fontSize: '10px', color: '#2563eb', textTransform: 'uppercase', margin: '0 0 4px 0' }}>Balance</p>
+              <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#2563eb', margin: 0 }}>${(member.committedAmount - totalPaid).toLocaleString()}</p>
+            </div>
+          </div>
+
+          {/* Progress Bar */}
+          <div style={{ marginBottom: '20px' }}>
+            <div style={{ height: '8px', backgroundColor: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${percent}%`, backgroundColor: '#22c55e', borderRadius: '4px' }} />
+            </div>
+            <p style={{ fontSize: '11px', color: '#94a3b8', textAlign: 'right', marginTop: '4px' }}>{percent}% Complete</p>
+          </div>
+
+          {/* Recent Activity */}
+          {localPayments.length > 0 && (
+            <div style={{ marginBottom: '20px' }}>
+              <h3 style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>
+                Recent Activity
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {localPayments.slice(0, 4).map((payment) => (
+                  <div key={payment.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', backgroundColor: '#f8fafc', borderRadius: '6px' }}>
+                    <span style={{ fontSize: '13px', color: '#64748b' }}>{payment.date}</span>
+                    <span style={{ fontSize: '14px', fontWeight: '600', color: '#0f172a' }}>${payment.amount.toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Footer */}
+          <div style={{ textAlign: 'center', paddingTop: '16px', borderTop: '1px solid #e2e8f0' }}>
+            <p style={{ fontSize: '12px', color: '#64748b', fontStyle: 'italic', margin: 0 }}>
+              JazakAllah Khair for your continued support.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Snapshot Preview Modal */}
+      {snapshotPreview && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+              <h3 className="font-semibold text-slate-900 dark:text-white">Contribution Statement</h3>
+              <button
+                onClick={() => setSnapshotPreview(null)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-4">
+              <img src={snapshotPreview} alt="Contribution Statement" className="w-full rounded-lg border border-slate-200 dark:border-slate-700" />
+            </div>
+            <div className="p-4 border-t border-slate-200 dark:border-slate-700 flex gap-2">
+              {canShare && (
+                <button
+                  onClick={shareSnapshot}
+                  className="flex-1 flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white py-2.5 rounded-lg font-medium transition-colors"
+                >
+                  <Share2 size={18} />
+                  Share
+                </button>
+              )}
+              <button
+                onClick={copySnapshotToClipboard}
+                className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white py-2.5 rounded-lg font-medium transition-colors"
+              >
+                {snapshotCopied ? <Check size={18} /> : <Copy size={18} />}
+                {snapshotCopied ? 'Copied!' : 'Copy'}
+              </button>
+              <button
+                onClick={downloadSnapshot}
+                className="flex-1 flex items-center justify-center gap-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 py-2.5 rounded-lg font-medium transition-colors border border-slate-200 dark:border-slate-600"
+              >
+                <Download size={18} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
