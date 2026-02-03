@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Moon, Sun, Lock, ArrowRight, ShieldCheck, Eye, EyeOff } from 'lucide-react';
+import { Sun, Moon, Lock, ArrowRight, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 
 interface LoginPageProps {
   onLogin: (password: string) => Promise<boolean>;
@@ -37,10 +37,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, theme, toggleTheme }) =>
 
         <div className="w-full max-w-md">
             <div className="text-center mb-8 animate-in slide-in-from-top-4 fade-in duration-500">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 shadow-lg shadow-blue-500/30 mb-4 border border-white/10">
-                    <Moon size={32} className="text-white fill-white/20" />
-                </div>
-                <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight mb-2">Markaz Masjid</h1>
+                <img src="/logo.png" alt="Markaz Masjid" className="h-24 w-auto mx-auto mb-4 rounded-xl" />
                 <p className="text-slate-500 dark:text-slate-400">Community Contribution Tracker</p>
             </div>
 

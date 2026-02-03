@@ -286,17 +286,12 @@ const App: React.FC = () => {
       {/* Top Navigation */}
       <header className="relative bg-white/80 dark:bg-[#1e293b]/80 backdrop-blur-md shadow-sm dark:shadow-lg sticky top-0 z-30 border-b border-slate-200 dark:border-slate-700/50 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-emerald-600 rounded-lg blur opacity-40 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
-                <div className="relative bg-white dark:bg-[#0f172a] w-10 h-10 rounded-lg flex items-center justify-center border border-slate-200 dark:border-slate-700">
-                    <Moon size={20} className="text-blue-600 dark:text-blue-400 fill-blue-400/20" />
-                </div>
-            </div>
+          <button onClick={() => setActiveTab('dashboard')} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <img src="/logo.png" alt="Markaz Masjid" className="h-10 w-auto rounded-lg" />
             <span className="font-bold text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400">
                 Markaz Masjid
             </span>
-          </div>
+          </button>
           
           <nav className="flex items-center gap-2">
             <button 
@@ -307,19 +302,19 @@ const App: React.FC = () => {
                 {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
             </button>
             <div className="w-px h-6 bg-slate-300 dark:bg-slate-700 mx-1"></div>
-            <button 
+            <button
                 onClick={() => setActiveTab('dashboard')}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === 'dashboard' ? 'bg-blue-50 text-blue-600 dark:bg-blue-600/10 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5'}`}
             >
                 <LayoutDashboard size={18} />
-                <span className="hidden sm:inline">Dashboard</span>
+                <span>Dashboard</span>
             </button>
-            <button 
+            <button
                 onClick={() => setActiveTab('members')}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === 'members' ? 'bg-blue-50 text-blue-600 dark:bg-blue-600/10 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5'}`}
             >
                 <Users size={18} />
-                <span className="hidden sm:inline">Members</span>
+                <span>Members</span>
             </button>
             <div className="w-px h-6 bg-slate-300 dark:bg-slate-700 mx-1"></div>
             <button 
