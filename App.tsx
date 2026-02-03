@@ -8,7 +8,7 @@ import ImportMembersModal from './components/ImportMembersModal';
 import GeminiChat from './components/GeminiChat';
 import LoginPage from './components/LoginPage';
 import VantaBackground from './components/VantaBackground';
-import { supabase, mapMemberFromDB, mapMemberToDB, DbMember } from './services/supabaseClient';
+import { supabase, mapMemberFromDB, mapMemberToDB, DbMember, validateAccessCode } from './services/supabaseClient';
 import { Search, LayoutDashboard, Users, Plus, Moon, Sun, LogOut, RotateCw, AlertCircle, Upload } from 'lucide-react';
 
 const App: React.FC = () => {
@@ -138,8 +138,9 @@ const App: React.FC = () => {
 
   const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
 
-  const handleLogin = (password: string) => {
-    if (password === '1245') {
+  const handleLogin = async (password: string) => {
+    const isValid = await validateAccessCode(password);
+    if (isValid) {
         setIsAuthenticated(true);
         localStorage.setItem('isAuth', 'true');
         return true;

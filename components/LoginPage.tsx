@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Moon, Sun, Lock, ArrowRight, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 
 interface LoginPageProps {
-  onLogin: (password: string) => boolean;
+  onLogin: (password: string) => Promise<boolean>;
   theme: 'dark' | 'light';
   toggleTheme: () => void;
 }
@@ -13,20 +13,16 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, theme, toggleTheme }) =>
   const [error, setError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(false);
-    
-    // Simulate a small network delay for realistic effect
-    setTimeout(() => {
-        const success = onLogin(password);
-        if (!success) {
-            setError(true);
-            setIsLoading(false);
-        }
-        // If success, App component will unmount this, so no need to set loading false
-    }, 600);
+
+    const success = await onLogin(password);
+    if (!success) {
+        setError(true);
+        setIsLoading(false);
+    }
   };
 
   return (

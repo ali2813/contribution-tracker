@@ -31,7 +31,7 @@ export const mapMemberFromDB = (dbMember: any): Member => ({
 });
 
 export const mapMemberToDB = (member: Member): DbMember => ({
-    id: member.id, 
+    id: member.id,
     name: member.name,
     phone: member.phone || null,
     email: member.email || null,
@@ -40,3 +40,18 @@ export const mapMemberToDB = (member: Member): DbMember => ({
     payments: member.payments,
     notes: member.notes || null
 });
+
+export const validateAccessCode = async (code: string): Promise<boolean> => {
+    try {
+        const { data, error } = await supabase
+            .from('app_config')
+            .select('value')
+            .eq('key', 'access_code')
+            .single();
+
+        if (error || !data) return false;
+        return data.value === code;
+    } catch {
+        return false;
+    }
+};
