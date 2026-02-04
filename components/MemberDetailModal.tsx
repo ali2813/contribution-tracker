@@ -238,6 +238,35 @@ const MemberDetailModal: React.FC<MemberDetailModalProps> = ({ member, onClose, 
 
   const canShare = typeof navigator !== 'undefined' && !!navigator.share;
 
+  const shareToWhatsApp = async () => {
+    if (!snapshotPreview) return;
+
+    try {
+      // Copy image to clipboard first
+      const response = await fetch(snapshotPreview);
+      const blob = await response.blob();
+      await navigator.clipboard.write([
+        new ClipboardItem({ 'image/png': blob })
+      ]);
+
+      // Open WhatsApp with the member's number if available
+      const cleanPhone = member.phone.replace(/\D/g, '');
+      const whatsappUrl = cleanPhone
+        ? `https://wa.me/${cleanPhone}`
+        : 'https://web.whatsapp.com';
+
+      window.open(whatsappUrl, '_blank');
+
+      alert('Image copied! Paste it in the WhatsApp chat (Ctrl+V or long-press).');
+    } catch (error) {
+      console.error('Failed to share to WhatsApp:', error);
+      // Fallback: just open WhatsApp
+      const cleanPhone = member.phone.replace(/\D/g, '');
+      window.open(cleanPhone ? `https://wa.me/${cleanPhone}` : 'https://web.whatsapp.com', '_blank');
+      alert('Could not copy image automatically. Please download and share manually.');
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-[#1e293b] rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col transition-colors duration-300 animate-in zoom-in-95 duration-200">
@@ -570,13 +599,19 @@ const MemberDetailModal: React.FC<MemberDetailModalProps> = ({ member, onClose, 
               <img src={snapshotPreview} alt="Contribution Statement" className="w-full rounded-lg border border-slate-200 dark:border-slate-700" />
             </div>
             <div className="p-4 border-t border-slate-200 dark:border-slate-700 flex gap-2">
+              <button
+                onClick={shareToWhatsApp}
+                className="flex-1 flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white py-2.5 rounded-lg font-medium transition-colors"
+              >
+                <MessageCircle size={18} />
+                WhatsApp
+              </button>
               {canShare && (
                 <button
                   onClick={shareSnapshot}
-                  className="flex-1 flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white py-2.5 rounded-lg font-medium transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 bg-slate-600 hover:bg-slate-500 text-white py-2.5 rounded-lg font-medium transition-colors"
                 >
                   <Share2 size={18} />
-                  Share
                 </button>
               )}
               <button
@@ -584,7 +619,6 @@ const MemberDetailModal: React.FC<MemberDetailModalProps> = ({ member, onClose, 
                 className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white py-2.5 rounded-lg font-medium transition-colors"
               >
                 {snapshotCopied ? <Check size={18} /> : <Copy size={18} />}
-                {snapshotCopied ? 'Copied!' : 'Copy'}
               </button>
               <button
                 onClick={downloadSnapshot}

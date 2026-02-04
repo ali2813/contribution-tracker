@@ -3,9 +3,15 @@ import { Member } from '../types';
 
 export const askGemini = async (question: string, members: Member[]): Promise<string> => {
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    
-    // Prepare a simplified dataset for context to save tokens and focus on relevance
+    const apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY;
+
+    if (!apiKey || apiKey === 'PLACEHOLDER_API_KEY') {
+      return "API key not configured. Please add your Gemini API key to .env.local";
+    }
+
+    const ai = new GoogleGenAI({ apiKey });
+
+    // Prepare a simplified dataset for context
     const contextData = members.map(m => {
       const totalPaid = m.payments.reduce((acc, p) => acc + p.amount, 0);
       const remaining = m.committedAmount - totalPaid;
@@ -15,7 +21,7 @@ export const askGemini = async (question: string, members: Member[]): Promise<st
     const prompt = `
       You are an intelligent assistant for 'Markaz Masjid' contribution tracker.
       Here is the current data of community members and their contributions:
-      
+
       --- START DATA ---
       ${contextData}
       --- END DATA ---
@@ -30,13 +36,13 @@ export const askGemini = async (question: string, members: Member[]): Promise<st
     `;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-2.0-flash',
       contents: prompt,
     });
 
     return response.text || "I couldn't generate a response.";
-  } catch (error) {
+  } catch (error: any) {
     console.error("Gemini API Error:", error);
-    return "Sorry, I encountered an error while processing your request.";
+    return `Error: ${error.message || "Failed to connect to Gemini API"}`;
   }
 };
