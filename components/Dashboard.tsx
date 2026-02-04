@@ -1,7 +1,7 @@
 import React from 'react';
 import { Member, DashboardStats } from '../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { Users, DollarSign, Wallet, TrendingUp, Landmark, Mail, Phone, UserCircle } from 'lucide-react';
+import { Users, DollarSign, Wallet, TrendingUp, Landmark, Mail, Phone, UserCircle, Calendar } from 'lucide-react';
 
 interface DashboardProps {
   members: Member[];
@@ -23,6 +23,12 @@ const Dashboard: React.FC<DashboardProps> = ({ members }) => {
     { name: 'Committed', amount: totalCommitted },
     { name: 'Collected', amount: totalCollected },
   ];
+
+  // Get all recent payments across all members
+  const recentPayments = members
+    .flatMap(m => m.payments.map(p => ({ ...p, memberName: m.name })))
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 8);
 
   const StatCard = ({ title, value, icon: Icon, color, subValue }: any) => (
     <div className="bg-white dark:bg-[#1e293b]/80 backdrop-blur-sm p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm dark:shadow-xl transition-colors duration-300">
@@ -71,45 +77,71 @@ const Dashboard: React.FC<DashboardProps> = ({ members }) => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Bar Chart */}
+        {/* Financial Overview - Split into Chart + Recent Payments */}
         <div className="lg:col-span-2 bg-white dark:bg-[#1e293b]/80 backdrop-blur-sm p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm dark:shadow-xl transition-colors duration-300">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Financial Overview</h3>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="currentColor" className="text-slate-200 dark:text-slate-700" />
-                <XAxis type="number" hide />
-                <YAxis dataKey="name" type="category" width={80} tick={{ fill: '#64748b' }} axisLine={false} tickLine={false} className="text-sm" />
-                <Tooltip
-                  cursor={{ fill: 'transparent' }}
-                  contentStyle={{
-                    backgroundColor: '#1e293b',
-                    borderRadius: '12px',
-                    border: '1px solid #334155',
-                    color: '#fff',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                  }}
-                  itemStyle={{ color: '#fff' }}
-                />
-                <Bar dataKey="amount" radius={[0, 4, 4, 0]} barSize={40}>
-                  {chartData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      className="transition-all duration-300"
-                      fill={index === 0
-                        ? 'var(--color-slate-400)' // Fallback
-                        : 'var(--color-blue-500)'
-                      }
-                      style={{
-                        fill: index === 0
-                          ? (document.documentElement.classList.contains('dark') ? '#94a3b8' : '#cbd5e1')
-                          : (document.documentElement.classList.contains('dark') ? '#60a5fa' : '#3b82f6')
-                      }}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Bar Chart */}
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="currentColor" className="text-slate-200 dark:text-slate-700" />
+                  <XAxis type="number" hide />
+                  <YAxis dataKey="name" type="category" width={70} tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <Tooltip
+                    cursor={{ fill: 'transparent' }}
+                    contentStyle={{
+                      backgroundColor: '#1e293b',
+                      borderRadius: '12px',
+                      border: '1px solid #334155',
+                      color: '#fff',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                    }}
+                    itemStyle={{ color: '#fff' }}
+                  />
+                  <Bar dataKey="amount" radius={[0, 4, 4, 0]} barSize={32}>
+                    {chartData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        className="transition-all duration-300"
+                        fill={index === 0
+                          ? 'var(--color-slate-400)'
+                          : 'var(--color-blue-500)'
+                        }
+                        style={{
+                          fill: index === 0
+                            ? (document.documentElement.classList.contains('dark') ? '#94a3b8' : '#cbd5e1')
+                            : (document.documentElement.classList.contains('dark') ? '#60a5fa' : '#3b82f6')
+                        }}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Recent Payments */}
+            <div>
+              <h4 className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-2">
+                <Calendar size={14} />
+                Recent Payments
+              </h4>
+              <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                {recentPayments.length === 0 ? (
+                  <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-4">No payments yet</p>
+                ) : (
+                  recentPayments.map((payment, idx) => (
+                    <div key={`${payment.id}-${idx}`} className="flex items-center justify-between text-sm py-1.5 border-b border-slate-100 dark:border-slate-700/50 last:border-0">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-slate-700 dark:text-slate-200 truncate">{payment.memberName}</p>
+                        <p className="text-xs text-slate-400 dark:text-slate-500">{payment.date}</p>
+                      </div>
+                      <span className="font-semibold text-emerald-600 dark:text-emerald-400 ml-2">${payment.amount.toLocaleString()}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
           </div>
         </div>
 

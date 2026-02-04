@@ -432,26 +432,21 @@ const MemberDetailModal: React.FC<MemberDetailModalProps> = ({ member, onClose, 
                     </div>
                 ) : (
                     localPayments.map(payment => (
-                        <div key={payment.id} className="bg-white dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600 transition-colors flex justify-between items-center group shadow-sm dark:shadow-none">
-                            <div className="flex items-center gap-4">
-                                <div className="bg-blue-50 dark:bg-blue-500/10 p-2 rounded-full text-blue-600 dark:text-blue-400 shrink-0">
-                                    <DollarSign size={20} />
+                        <div key={payment.id} className="bg-white dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600 transition-colors group shadow-sm dark:shadow-none">
+                            <div className="flex justify-between items-start">
+                                <div className="flex items-center gap-4">
+                                    <div className="bg-blue-50 dark:bg-blue-500/10 p-2 rounded-full text-blue-600 dark:text-blue-400 shrink-0">
+                                        <DollarSign size={20} />
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-slate-900 dark:text-white">${payment.amount.toLocaleString()}</p>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                                            <Calendar size={10} />
+                                            {payment.date}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="font-bold text-slate-900 dark:text-white">${payment.amount.toLocaleString()}</p>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                                        <Calendar size={10} />
-                                        {payment.date}
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-2 sm:gap-4">
-                                {payment.note && (
-                                    <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2 py-1 rounded-md hidden sm:inline-block border border-slate-200 dark:border-slate-600 max-w-[100px] truncate">
-                                        {payment.note}
-                                    </span>
-                                )}
-                                <button 
+                                <button
                                     type="button"
                                     onClick={(e) => handleDeletePayment(e, payment.id)}
                                     disabled={deletingId === payment.id}
@@ -465,6 +460,13 @@ const MemberDetailModal: React.FC<MemberDetailModalProps> = ({ member, onClose, 
                                     )}
                                 </button>
                             </div>
+                            {payment.note && (
+                                <div className="mt-2 ml-14">
+                                    <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2 py-1 rounded-md inline-block border border-slate-200 dark:border-slate-600">
+                                        {payment.note}
+                                    </span>
+                                </div>
+                            )}
                         </div>
                     ))
                 )}
