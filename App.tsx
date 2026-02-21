@@ -6,10 +6,11 @@ import MemberDetailModal from './components/MemberDetailModal';
 import AddMemberModal from './components/AddMemberModal';
 import ImportMembersModal from './components/ImportMembersModal';
 import GeminiChat from './components/GeminiChat';
+import RemindAllModal from './components/RemindAllModal';
 import LoginPage from './components/LoginPage';
 import VantaBackground from './components/VantaBackground';
 import { supabase, mapMemberFromDB, mapMemberToDB, DbMember, validateAccessCode } from './services/supabaseClient';
-import { Search, LayoutDashboard, Users, Plus, Moon, Sun, LogOut, RotateCw, AlertCircle, Upload, Menu, X } from 'lucide-react';
+import { Search, LayoutDashboard, Users, Plus, Moon, Sun, LogOut, RotateCw, AlertCircle, Upload, Menu, X, Send } from 'lucide-react';
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -24,6 +25,7 @@ const App: React.FC = () => {
   // Modal States
   const [isMemberFormOpen, setIsMemberFormOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isRemindAllOpen, setIsRemindAllOpen] = useState(false);
   const [memberToEdit, setMemberToEdit] = useState<Member | undefined>(undefined);
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -400,7 +402,16 @@ const App: React.FC = () => {
                             <span className="hidden sm:inline">Import</span>
                         </button>
 
-                        <button 
+                        <button
+                            onClick={() => setIsRemindAllOpen(true)}
+                            className="flex items-center gap-2 bg-[#25D366] text-white px-4 py-2.5 rounded-xl hover:bg-[#20bd5a] transition-all shadow-lg shadow-emerald-500/20 font-medium active:scale-95 whitespace-nowrap"
+                            title="Remind All Members"
+                        >
+                            <Send size={18} />
+                            <span className="hidden sm:inline">Remind All</span>
+                        </button>
+
+                        <button
                             onClick={openAddModal}
                             className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/20 font-medium active:scale-95"
                         >
@@ -490,6 +501,10 @@ const App: React.FC = () => {
             onImport={handleBulkImport}
             existingMembers={members}
         />
+      )}
+
+      {isRemindAllOpen && (
+        <RemindAllModal members={members} onClose={() => setIsRemindAllOpen(false)} />
       )}
 
       {/* AI Assistant */}
